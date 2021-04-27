@@ -289,3 +289,13 @@ class GaussianMixtureModel:
         n_parameters = n_param_m + n_param_cov + n_param_coef
         
         return float(self.loglikelihood(x) - 0.5 * n_parameters * math.log(len(x)))
+
+
+class GaussianMixtureModelKMeans(GaussianMixtureModel):
+    """GMM z inicjalizacją średnich z użyciem KMeans."""
+    def fit(self, x: torch.Tensor, random_state = None) -> float:
+        kmeans = KMeans(n_clusters=self.n_components, random_state=random_state)
+        kmeans.fit(x)
+        
+        self.means = torch.tensor(kmeans.cluster_centers_, dtype=self.means.dtype)
+        super(GaussianMixtureModelKMeans, self).fit(x)
