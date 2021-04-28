@@ -23,8 +23,7 @@ def get_f1_score(
 
 def discretize(
     kbd: KBinsDiscretizer,
-    df: pd.DataFrame,
-    n_bins: int = 5
+    df: pd.DataFrame
 ) -> pd.DataFrame:
     discrete_cols = df.select_dtypes(include='category').columns.values
     continuous_cols = [
@@ -36,3 +35,9 @@ def discretize(
         df_discretized[continuous_cols] = \
             kbd.transform(df[continuous_cols]).astype('int32')
     return df_discretized
+
+def fix_missing_values(
+    kbd: KBinsDiscretizer,
+    df: pd.DataFrame
+) -> pd.DataFrame:
+    
