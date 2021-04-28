@@ -1,11 +1,20 @@
 import pandas as pd
 import numpy as np
+import seaborn as sns
 from typing import Literal
 
 from copy import deepcopy
 from pgmpy.models import BayesianModel
 from sklearn.preprocessing import KBinsDiscretizer
-from sklearn.metrics import f1_score, classification_report
+from sklearn.metrics import f1_score, classification_report, make_scorer
+from sklearn.model_selection import cross_val_score
+
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import RandomForestClassifier
 
 
 def get_f1_score(
@@ -39,7 +48,7 @@ def discretize(
     return df_discretized
 
 
-def get_fixed_dataset(return_kbd=False) -> pd.DataFrame:
+def get_fixed_with_bn_dataset(return_kbd=False) -> pd.DataFrame:
     df = pd.read_csv("dataset/diabetes.csv").astype({
         "Pregnancies": "int32",
         "Glucose": "int32",
@@ -102,3 +111,39 @@ def _fix_missing_values(
         bn.predict(to_fix.drop(columns=missings)).set_index(to_fix.index)
     df.loc[to_fix.index, :] = to_fix
     return df
+
+
+def test_simple_classifiers(X, y):
+
+    scorer = make_scorer(f1_score)
+
+    results = {"Classifier": [], "f1_score": []}
+    for Classifier in [
+        GaussianNB, SVC, KNeighborsClassifier,
+        DecisionTreeClassifier, AdaBoostClassifier, RandomForestClassifier
+    ]:
+        model = Classifier()
+        results["Classifier"].append(str(model)[:-2])
+        result = cross_val_score(model, X, y, cv=10, scoring=scorer)
+        results["f1_score"].append(result)
+
+    results = pd.DataFrame(data=results)
+    results = results.explode(
+        'f1_score'
+    ).astype({"f1_score": "float"}).reset_index(drop=True)
+    return results
+
+
+def plot_simple_classifiers_results(results: pd.DataFrame):
+    print(
+        "Best model %s got f1-score %0.3f" %
+        tuple(results.iloc[
+            results["f1_score"].idxmax()
+        ][["Classifier", "f1_score"]])
+    )
+    sns.catplot(
+        x="f1_score",
+        y="Classifier",
+        hue="dataset",
+        data=results
+    )
