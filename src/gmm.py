@@ -228,6 +228,17 @@ class GaussianMixtureModel:
             x = as_tensor(x)
 
         return self.expectation_step(x)
+    
+    def pdf(self, x: Union[torch.Tensor, np.ndarray]) -> torch.Tensor:
+        if not is_tensor(x):
+            x = as_tensor(x)
+            
+        resp = torch.tensor([
+            [self.mixing_coefs[i]] *\
+            multivariate_normal.pdf(x, self.means[i], self.covariances[i], allow_singular=True)
+            for i in range(self.n_components)
+        ], dtype=torch.float32)
+        return resp.sum(axis=0)
         
     def _plot_training(self):
         """Wizualizacja uczenia."""
