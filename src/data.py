@@ -68,11 +68,11 @@ def get_fixed_with_bn_dataset(return_kbd=False) -> pd.DataFrame:
     )
     df.iloc[coplete_rows] = discretize(kbd, df.iloc[coplete_rows])
     bn = BayesianModel([
+        ("Age", "Pregnancies"),
         ("BMI", "BloodPressure"),
         ("BMI", "Outcome"),
         ("Pregnancies", "Outcome"),
         ("DiabetesPedigreeFunction", "Outcome"),
-        ("Age", "Outcome"),
         ("Outcome", "Glucose"),
         ("Outcome", "Insulin"),
         ("Insulin", "SkinThickness"),
@@ -124,7 +124,9 @@ def test_simple_classifiers(X, y):
     ]:
         model = Classifier()
         results["Classifier"].append(str(model)[:-2])
-        result = cross_val_score(model, X, y, cv=10, scoring=scorer)
+        result = cross_val_score(
+            model, X, y, cv=10, scoring=scorer
+        )
         results["f1_score"].append(result)
 
     results = pd.DataFrame(data=results)
